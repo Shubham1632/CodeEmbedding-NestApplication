@@ -1,6 +1,4 @@
-import exp from 'constants';
-import { EmbeddingController } from './../embedding.controller';
-import { EmbeddingItem, Embeddings, OpenAIKeyCredential } from '@azure/openai';
+import { EmbeddingItem } from '@azure/openai';
 
 export class EmbeddingDTO {
   embedding: EmbeddingItem;
@@ -10,6 +8,7 @@ export class EmbeddingDTO {
 export class FunctionData {
   name: string;
   body: string;
+  link: string;
 }
 
 export class EmbeddingResultDTO {
@@ -20,7 +19,7 @@ export class EmbeddingResultDTO {
 export class Point {
   id: string;
   vector: number[];
-  payload: { code: string; name: string };
+  payload: { code: string; name: string; link: string };
 }
 
 export class SearchResultDTO {

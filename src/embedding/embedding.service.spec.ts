@@ -53,14 +53,18 @@ describe('EmbeddingService', () => {
       {
         name: 'GlowAdvancement.addCriterion',
         body: 'public void addCriterion(String criterion) {\n        if (!criteriaIds.contains(criterion)) {\n            criteriaIds.add(criterion);\n        }\n    }',
+        link: 'dummy link',
       },
       {
         name: 'GlowAdvancement.addRequirement',
         body: 'public void addRequirement(List<String> criteria) {\n        requirements.add(criteria);\n    }',
+        link: 'dummy link',
       },
+
       {
         name: 'GlowAdvancement.getCriteria',
         body: '@Override\n    public List<String> getCriteria() {\n        return ImmutableList.copyOf(criteriaIds);\n    }',
+        link: 'dummy link',
       },
     ];
     const mockedUpsertResponse: EmbeddingResultDTO = {
@@ -119,6 +123,8 @@ describe('EmbeddingService', () => {
         score: 0.7953689,
         payload: {
           code: 'public void addCriterion(String criterion) {\n        if (!criteriaIds.contains(criterion)) {\n            criteriaIds.add(criterion);\n        }\n    }',
+          name: 'addCriterion',
+          link: 'dummyLink',
         },
         vector: null,
       },

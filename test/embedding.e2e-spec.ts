@@ -1,9 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { QdrantClient } from '@qdrant/js-client-rest';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { FunctionData } from '../src/embedding/dto/embedding.dto';
-import { QdrantClient } from '@qdrant/js-client-rest';
 import { functionData } from './data/embedding.data';
 
 describe('EmbeddingController (e2e)', () => {
@@ -30,7 +29,7 @@ describe('EmbeddingController (e2e)', () => {
     qadrantClient.deleteCollection(collectionName);
   });
 
-  it('/ (POST) - should save embeddings in qdrand db', async () => {
+  it('/(POST) - should save embeddings in qdrand db', async () => {
     const response = await request(app.getHttpServer())
       .post(`/embedding?collectionName=ExampleCollection123`)
       .send(functionData);

@@ -1,4 +1,3 @@
-import { QdrantClient } from '@qdrant/js-client-rest';
 import {
   EmbeddingItem,
   Embeddings,
@@ -6,17 +5,16 @@ import {
   OpenAIKeyCredential,
 } from '@azure/openai';
 import { Injectable } from '@nestjs/common';
+import { QdrantClient } from '@qdrant/js-client-rest';
+import { log } from 'console';
+import { randomUUID } from 'crypto';
+import * as dotenv from 'dotenv';
 import {
   EmbeddingResultDTO,
   FunctionData,
   Point,
   SearchResultDTO,
 } from './dto/embedding.dto';
-import { randomUUID } from 'crypto';
-import { log } from 'console';
-import { copyFileSync } from 'fs';
-import * as dotenv from 'dotenv';
-import { escape } from 'querystring';
 
 @Injectable()
 export class EmbeddingService {
@@ -38,15 +36,8 @@ export class EmbeddingService {
     data: FunctionData[],
     collectionName: string,
   ): Promise<EmbeddingResultDTO> {
-    const collections = (await this.qdrantClient.getCollections()).collections;
-    let collectionExist: boolean = false;
-    collections.forEach((collection) => {
-      if (collection.name == collectionName) {
-        collectionExist = true;
-      }
-    });
+    const collectionExist = await this.isCollection(collectionName);
     if (!collectionExist) {
-      log('collection does not exist');
       this.createCollection(collectionName);
     }
     const functionbody: string[] = [];
@@ -55,6 +46,17 @@ export class EmbeddingService {
     });
     const embeddings = await this.createEmbeddings(functionbody);
     return await this.saveEmbeddings(embeddings, data, collectionName);
+  }
+
+  async isCollection(collectionName: string): Promise<boolean> {
+    const collections = (await this.qdrantClient.getCollections()).collections;
+    let collectionExist: boolean = false;
+    collections.forEach((collection) => {
+      if (collection.name == collectionName) {
+        collectionExist = true;
+      }
+    });
+    return collectionExist;
   }
 
   async createEmbeddings(data: string[]): Promise<Embeddings> {
@@ -87,11 +89,12 @@ export class EmbeddingService {
       payload: {
         code: functionData[index].body,
         name: functionData[index].name,
+        link: functionData[index].link,
       },
     };
   }
 
-  async createCollection(collectionName) {
+  async createCollection(collectionName: string) {
     try {
       await this.qdrantClient.createCollection(collectionName, {
         vectors: {
@@ -112,8 +115,9 @@ export class EmbeddingService {
 
     return await this.qdrantClient.search(collectionName, {
       vector: queryEmbedding.data[0].embedding,
-      limit: 3,
+      limit: 5,
       with_payload: true,
+      score_threshold: 0.5,
     });
   }
 }
