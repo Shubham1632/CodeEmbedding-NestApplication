@@ -6,6 +6,7 @@ import { EmbeddingService } from './embedding.service';
 describe('EmbeddingController', () => {
   let controller: EmbeddingController;
   let service: EmbeddingService;
+  const collectionName = 'code';
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,6 +18,7 @@ describe('EmbeddingController', () => {
           useFactory: () => {
             return {
               save: jest.fn(),
+              search: jest.fn(),
             };
           },
         },
@@ -46,9 +48,16 @@ describe('EmbeddingController', () => {
         body: '@Override\n    public List<String> getCriteria() {\n        return ImmutableList.copyOf(criteriaIds);\n    }',
       },
     ];
-    const collectionName = 'code';
+
     const response = controller.save(data, collectionName);
     expect(service.save).toBeCalledTimes(1);
     expect(service.save).toBeCalledWith(data, collectionName);
+  });
+
+  it('should call the search function from searching the given query', async () => {
+    const query = 'function to add a criteria';
+    const response = controller.search(query, collectionName);
+    expect(service.search).toBeCalledTimes(1);
+    expect(service.search).toBeCalledWith(query, collectionName);
   });
 });

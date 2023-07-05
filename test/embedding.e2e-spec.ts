@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { FunctionData } from '../src/embedding/dto/embedding.dto';
 import { QdrantClient } from '@qdrant/js-client-rest';
+import { functionData } from './data/embedding.data';
 
 describe('EmbeddingController (e2e)', () => {
   let app: INestApplication;
@@ -30,24 +31,21 @@ describe('EmbeddingController (e2e)', () => {
   });
 
   it('/ (POST) - should save embeddings in qdrand db', async () => {
-    const data: FunctionData[] = [
-      {
-        name: 'GlowAdvancement.addCriterion',
-        body: 'public void addCriterion(String criterion) {\n        if (!criteriaIds.contains(criterion)) {\n            criteriaIds.add(criterion);\n        }\n    }',
-      },
-      {
-        name: 'GlowAdvancement.addRequirement',
-        body: 'public void addRequirement(List<String> criteria) {\n        requirements.add(criteria);\n    }',
-      },
-      {
-        name: 'GlowAdvancement.getCriteria',
-        body: '@Override\n    public List<String> getCriteria() {\n        return ImmutableList.copyOf(criteriaIds);\n    }',
-      },
-    ];
     const response = await request(app.getHttpServer())
       .post(`/embedding?collectionName=ExampleCollection123`)
-      .send(data);
+      .send(functionData);
     expect(response.statusCode).toBe(201);
     expect(response.body.status).toBe('completed');
+  });
+
+  it('/(GET) - should return a search result for a particular query', async () => {
+    const query = 'fucntion to add a criteria';
+    const response = await request(app.getHttpServer())
+      .get(`/embedding?collectionName=ExampleCollection123&query=${query}`)
+      .send();
+    expect(response.statusCode).toBe(200);
+    expect(response.body[0].id).toBeDefined();
+    expect(response.body[0].score).toBeDefined();
+    expect(response.body[0].payload.code).toBeDefined();
   });
 });

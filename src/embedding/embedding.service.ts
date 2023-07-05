@@ -6,11 +6,17 @@ import {
   OpenAIKeyCredential,
 } from '@azure/openai';
 import { Injectable } from '@nestjs/common';
-import { EmbeddingResultDTO, FunctionData, Point } from './dto/embedding.dto';
+import {
+  EmbeddingResultDTO,
+  FunctionData,
+  Point,
+  SearchResultDTO,
+} from './dto/embedding.dto';
 import { randomUUID } from 'crypto';
 import { log } from 'console';
 import { copyFileSync } from 'fs';
 import * as dotenv from 'dotenv';
+import { escape } from 'querystring';
 
 @Injectable()
 export class EmbeddingService {
@@ -78,7 +84,10 @@ export class EmbeddingService {
     return {
       id: randomUUID().toString(),
       vector: embedding.embedding,
-      payload: { code: functionData[index].body },
+      payload: {
+        code: functionData[index].body,
+        name: functionData[index].name,
+      },
     };
   }
 
@@ -93,5 +102,18 @@ export class EmbeddingService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async search(
+    query: string,
+    collectionName: string,
+  ): Promise<SearchResultDTO[]> {
+    const queryEmbedding = await this.createEmbeddings([query]);
+
+    return await this.qdrantClient.search(collectionName, {
+      vector: queryEmbedding.data[0].embedding,
+      limit: 3,
+      with_payload: true,
+    });
   }
 }
