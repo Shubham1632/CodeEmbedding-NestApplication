@@ -60,10 +60,16 @@ export class EmbeddingService {
   }
 
   async createEmbeddings(data: string[]): Promise<Embeddings> {
-    return await this.openAIClient.getEmbeddings(
+    // TODO: check if the data is already in the cache
+
+    const result =  await this.openAIClient.getEmbeddings(
       'text-embedding-ada-002',
       data,
     );
+
+    // TODO: save the data in the cache
+
+    return result;
   }
   async saveEmbeddings(
     embeddings: Embeddings,
