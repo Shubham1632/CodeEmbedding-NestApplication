@@ -10,6 +10,7 @@ import { EmbeddingResultDTO, FunctionData, Point } from './dto/embedding.dto';
 import { randomUUID } from 'crypto';
 import { log } from 'console';
 import { copyFileSync } from 'fs';
+import * as dotenv from 'dotenv';
 
 @Injectable()
 export class EmbeddingService {
@@ -17,10 +18,10 @@ export class EmbeddingService {
     private readonly openAIClient: OpenAIClient,
     private readonly qdrantClient: QdrantClient,
   ) {
+    dotenv.config();
+    const openai_api_key = process.env.OPENAI_API_KEY;
     this.openAIClient = new OpenAIClient(
-      new OpenAIKeyCredential(
-        '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',
-      ),
+      new OpenAIKeyCredential(openai_api_key),
     );
     this.qdrantClient = new QdrantClient({
       url: 'http://127.0.0.1:6333',

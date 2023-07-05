@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EmbeddingController } from './embedding.controller';
 import { FunctionData } from './dto/embedding.dto';
 import { EmbeddingService } from './embedding.service';
-import { ColdObservable } from 'rxjs/internal/testing/ColdObservable';
 
 describe('EmbeddingController', () => {
   let controller: EmbeddingController;
