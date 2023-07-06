@@ -8,6 +8,8 @@ import {
   FunctionData,
   SearchResultDTO,
 } from './dto/embedding.dto';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
 describe('EmbeddingService', () => {
   let service: EmbeddingService;
@@ -33,6 +35,7 @@ describe('EmbeddingService', () => {
             return {
               upsert: jest.fn(),
               search: jest.fn(),
+              getCollections: jest.fn(),
             };
           },
         },
@@ -89,9 +92,13 @@ describe('EmbeddingService', () => {
       .spyOn(openai, 'getEmbeddings')
       .mockResolvedValue(mockedEmbeddingsResponse);
     jest.spyOn(qdrant, 'upsert').mockResolvedValue(mockedUpsertResponse);
+    jest
+      .spyOn(qdrant, 'getCollections')
+      .mockResolvedValue({ collections: [{ name: collectionName }] });
 
     const responce = await service.save(data, collectionName);
     expect(responce.status).toBe('completed');
+    expect(responce.operation_id).toBe(2);
   });
 
   it('should return a search result for the given query from qdrant database', async () => {
@@ -140,6 +147,7 @@ describe('EmbeddingService', () => {
       query,
       collectionName,
     );
-    expect(response[0].id).toBeDefined();
+    expect(response[0].id).toBe('43b83ae1-dbf8-4d42-93a0-7d0d127c9043');
+    expect(response[0].version).toBe(0);
   });
 });

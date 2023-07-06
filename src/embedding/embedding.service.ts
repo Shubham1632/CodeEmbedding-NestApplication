@@ -21,16 +21,7 @@ export class EmbeddingService {
   constructor(
     private readonly openAIClient: OpenAIClient,
     private readonly qdrantClient: QdrantClient,
-  ) {
-    dotenv.config();
-    const openai_api_key = process.env.OPENAI_API_KEY;
-    this.openAIClient = new OpenAIClient(
-      new OpenAIKeyCredential(openai_api_key),
-    );
-    this.qdrantClient = new QdrantClient({
-      url: 'http://127.0.0.1:6333',
-    });
-  }
+  ) {}
 
   async save(
     data: FunctionData[],
