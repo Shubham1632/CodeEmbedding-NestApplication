@@ -4,9 +4,9 @@ import {
   OpenAIClient,
   OpenAIKeyCredential,
 } from '@azure/openai';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { log } from 'console';
+import { error, log } from 'console';
 import { randomUUID } from 'crypto';
 import * as dotenv from 'dotenv';
 import {
@@ -103,6 +103,11 @@ export class EmbeddingService {
     collectionName: string,
   ): Promise<SearchResultDTO[]> {
     const queryEmbedding = await this.createEmbeddings([query]);
+
+    const collectionExist = await this.isCollection(collectionName);
+    if (!collectionExist) {
+      throw new BadRequestException('Collection Name dosent exist');
+    }
 
     return await this.qdrantClient.search(collectionName, {
       vector: queryEmbedding.data[0].embedding,

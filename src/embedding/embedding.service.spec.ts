@@ -138,10 +138,12 @@ describe('EmbeddingService', () => {
     ];
 
     jest.spyOn(qdrant, 'search').mockResolvedValue(mockedSearchResponse);
-
     jest
       .spyOn(openai, 'getEmbeddings')
       .mockResolvedValue(mockedEmbeddingsResponse);
+    jest
+      .spyOn(qdrant, 'getCollections')
+      .mockResolvedValue({ collections: [{ name: collectionName }] });
 
     const response: SearchResultDTO[] = await service.search(
       query,
