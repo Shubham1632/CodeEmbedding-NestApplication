@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 
 import { EmbeddingService } from './embedding.service';
 import {
@@ -16,6 +23,13 @@ export class EmbeddingController {
     @Query('query') query: string,
     @Query('collectionName') collectionName: string,
   ): Promise<SearchResultDTO[]> {
+    if (!collectionName) {
+      throw new BadRequestException('Please provide collectionName.');
+    }
+    if (!query) {
+      throw new BadRequestException('Please provide valide query.');
+    }
+
     return await this.embeddingService.search(query, collectionName);
   }
 
@@ -24,6 +38,9 @@ export class EmbeddingController {
     @Body() data: FunctionData[],
     @Query('collectionName') collectionName: string,
   ): Promise<EmbeddingResultDTO> {
+    if (data.length == undefined || !data) {
+      throw new BadRequestException('please provide data');
+    }
     return this.embeddingService.save(data, collectionName);
   }
 }
