@@ -17,13 +17,13 @@ export class EmbeddingService {
   ): Promise<EmbeddingResultDTO> {
     const collectionExist = await this.isCollection(collectionName);
     if (!collectionExist) {
-      this.createCollection(collectionName);
+      await this.createCollection(collectionName);
     }
-    const functionbody: string[] = [];
+    const functionBody: string[] = [];
     data.forEach((element) => {
-      functionbody.push(element.body);
+      functionBody.push(element.body);
     });
-    const embeddings = await this.createEmbeddings(functionbody);
+    const embeddings = await this.createEmbeddings(functionBody);
     return await this.saveEmbeddings(embeddings, data, collectionName);
   }
 
