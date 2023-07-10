@@ -2,16 +2,16 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import * as request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/app.module';
 import { functionData } from './data/embedding.data';
 
 describe('EmbeddingController (e2e)', () => {
   let app: INestApplication;
-  let qadrantClient: QdrantClient;
-  let collectionName: string = 'ExampleCollection123';
+  let qdrantClient: QdrantClient;
+  let collectionName: string = 'E2E';
 
   beforeAll(async () => {
-    qadrantClient = new QdrantClient({
+    qdrantClient = new QdrantClient({
       url: 'http://127.0.0.1:6333',
     });
   });
@@ -26,7 +26,7 @@ describe('EmbeddingController (e2e)', () => {
   });
 
   afterAll(async () => {
-    qadrantClient.deleteCollection(collectionName);
+    qdrantClient.deleteCollection(collectionName);
   });
 
   it('/(POST) - should save embeddings in qdrand db', async () => {

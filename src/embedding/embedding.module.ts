@@ -4,7 +4,8 @@ import { EmbeddingService } from './embedding.service';
 import { OpenAIClient, OpenAIKeyCredential } from '@azure/openai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import * as dotenv from 'dotenv';
-import {CacheService} from "../cache/cache-service/cache.service";
+import { CacheService } from '../cache/cache-service/cache.service';
+import { Database } from 'arangojs';
 
 @Module({
   controllers: [EmbeddingController],
@@ -27,7 +28,15 @@ import {CacheService} from "../cache/cache-service/cache.service";
         });
       },
     },
-
+    {
+      provide: 'ARANGODB_CONNECTION',
+      useFactory: () => {
+        return new Database({
+          url: 'http://localhost:8529',
+          auth: { username: 'root', password: 'test123' },
+        });
+      },
+    },
   ],
 })
 export class EmbeddingModule {}
