@@ -1,12 +1,12 @@
 import {Module} from '@nestjs/common';
 import {CacheService} from './cache-service/cache.service';
-import {aql, Database} from "arangojs";
+import {Database} from "arangojs";
 
 @Module({
   providers: [CacheService,
     {
       provide: 'ARANGODB_CONNECTION',
-      useFactory:  () => {
+      useFactory: () => {
         return new Database({
           url: 'http://localhost:8529',
           databaseName: 'embedding',
@@ -14,10 +14,7 @@ import {aql, Database} from "arangojs";
         });
       },
     },
-    {
-      provide: 'ARANGODB_QUERY',
-      useValue: aql,
-    },
   ]
 })
-export class CacheModule {}
+export class CacheModule {
+}

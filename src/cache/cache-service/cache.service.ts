@@ -14,7 +14,6 @@ export class CacheService {
     private  collection: DocumentCollection<EmbeddingCache>;
     constructor(
         @Inject('ARANGODB_CONNECTION') private readonly db: Database,
-        @Inject('ARANGODB_QUERY') private readonly aql,
     ) {
          this.collection = this.db.collection("cache");
     }
@@ -33,5 +32,11 @@ export class CacheService {
             hash = '0' + hash;
         }
         return hash;
+    }
+
+    async get(code: string): Promise<EmbeddingCache> {
+        const hash = this.getSHA224(code);
+        const documents = await this.collection.documents(hash);
+        return documents?.length > 0 ? documents[0] : null;
     }
 }

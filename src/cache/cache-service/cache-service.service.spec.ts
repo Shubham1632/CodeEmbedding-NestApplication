@@ -16,19 +16,8 @@ describe('CacheServiceService', () => {
             return {
               collection: jest.fn().mockReturnValue(
                   {
-                    save: jest.fn()
-                  }
-              )
-            }
-          }
-        },
-        {
-          provide: 'ARANGODB_QUERY',
-          useFactory:  () => {
-            return {
-              collection: jest.fn().mockReturnValue(
-                  {
-                    save: jest.fn()
+                    save: jest.fn(),
+                    documents: jest.fn()
                   }
               )
             }
@@ -44,13 +33,27 @@ describe('CacheServiceService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should call save method from arango collection when saving cache', () => {
-    service.save('test', [1,2,3]);
+  it('should call save method from arango collection when saving cache', async() => {
+    await service.save('test', [1,2,3]);
     expect(collection.save).toBeCalledTimes(1);
     expect(collection.save).toBeCalledWith({
       _key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809',
       code: 'test',
       embedding: [1,2,3]
     });
+  });
+
+  it('should call get method from arango collection when getting cache', async() => {
+    jest.spyOn(collection, 'documents').mockResolvedValue([{_key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809', code: 'test', embedding: [1, 2]}]);
+    await service.get('test');
+    expect(collection.documents).toBeCalledTimes(1);
+    expect(collection.documents).toBeCalledWith('90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809'
+    );
+  });
+
+  it('should return null if key doesn\'t exit', async () => {
+    jest.spyOn(collection, 'documents').mockResolvedValue([]);
+    const result = await service.get('test');
+    expect(result).toBeNull();
   });
 });
