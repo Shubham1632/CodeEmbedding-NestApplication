@@ -1,15 +1,8 @@
-import { Query } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { EmbeddingService } from './embedding.service';
-import { OpenAIClient } from '@azure/openai';
-import { QdrantClient } from '@qdrant/js-client-rest';
-import {
-  EmbeddingResultDTO,
-  FunctionData,
-  SearchResultDTO,
-} from './dto/embedding.dto';
-import * as dotenv from 'dotenv';
-import path from 'path';
+import {Test, TestingModule} from '@nestjs/testing';
+import {EmbeddingService} from './embedding.service';
+import {OpenAIClient} from '@azure/openai';
+import {QdrantClient} from '@qdrant/js-client-rest';
+import {EmbeddingResultDTO, FunctionData, SearchResultDTO,} from './dto/embedding.dto';
 
 describe('EmbeddingService', () => {
   let service: EmbeddingService;

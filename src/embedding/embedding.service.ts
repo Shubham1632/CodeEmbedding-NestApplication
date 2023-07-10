@@ -1,20 +1,8 @@
-import {
-  EmbeddingItem,
-  Embeddings,
-  OpenAIClient,
-  OpenAIKeyCredential,
-} from '@azure/openai';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { QdrantClient } from '@qdrant/js-client-rest';
-import { error, log } from 'console';
-import { randomUUID } from 'crypto';
-import * as dotenv from 'dotenv';
-import {
-  EmbeddingResultDTO,
-  FunctionData,
-  Point,
-  SearchResultDTO,
-} from './dto/embedding.dto';
+import {EmbeddingItem, Embeddings, OpenAIClient,} from '@azure/openai';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {QdrantClient} from '@qdrant/js-client-rest';
+import {randomUUID} from 'crypto';
+import {EmbeddingResultDTO, FunctionData, Point, SearchResultDTO,} from './dto/embedding.dto';
 
 @Injectable()
 export class EmbeddingService {
