@@ -19,6 +19,7 @@ describe('CacheServiceService', () => {
                 save: jest.fn(),
                 documents: jest.fn().mockResolvedValue([]),
                 exists: jest.fn().mockResolvedValue(true),
+                documentExists: jest.fn().mockResolvedValue(false),
               }),
               listDatabases: jest.fn().mockResolvedValue(['code-embedding']),
             };
@@ -62,6 +63,7 @@ describe('CacheServiceService', () => {
   });
 
   it('should call get method from arango collection when getting cache', async () => {
+    jest.spyOn(collection, 'documentExists').mockResolvedValue(true);
     jest.spyOn(collection, 'documents').mockResolvedValue([
       {
         _key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809',

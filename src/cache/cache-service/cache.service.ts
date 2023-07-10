@@ -14,13 +14,12 @@ type EmbeddingCache = {
 export class CacheService {
   private collection: DocumentCollection<EmbeddingCache>;
 
-  constructor(@Inject('ARANGODB_CONNECTION') private readonly db: Database) {}
+  constructor(@Inject('ARANGODB_CONNECTION') private db: Database) {}
 
   async save(code: string, embedding: Embeddings): Promise<void> {
     await this.setupDb();
     const hash = this.getSHA224(code);
-    const documents = await this.collection.documents([hash]);
-    if (documents?.length > 0) {
+    if (await this.collection.documentExists(hash)) {
       await this.collection.update(hash, { embedding });
     } else {
       await this.collection.save({ _key: hash, code, embedding });
@@ -28,10 +27,6 @@ export class CacheService {
   }
 
   private async setupDb() {
-    const databaseList = await this.db.listDatabases();
-    if (!databaseList.includes('code-embedding')) {
-      await this.db.createDatabase('code-embedding');
-    }
     if (!(await this.db.collection('cache').exists())) {
       await this.db.createCollection('cache');
     }
@@ -49,7 +44,9 @@ export class CacheService {
   async get(code: string): Promise<Embeddings> {
     await this.setupDb();
     const hash = this.getSHA224(code);
-    const documents = await this.collection.documents([hash]);
-    return documents?.length > 0 ? documents[0].embedding : null;
+    if (await this.collection.documentExists(hash)) {
+      return (await this.collection.documents([hash]))[0].embedding;
+    }
+    return null;
   }
 }

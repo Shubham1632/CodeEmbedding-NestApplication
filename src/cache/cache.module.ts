@@ -7,11 +7,16 @@ import { Database } from 'arangojs';
     CacheService,
     {
       provide: 'ARANGODB_CONNECTION',
-      useFactory: () => {
-        return new Database({
+      useFactory: async () => {
+        const sysDb = new Database({
           url: 'http://localhost:8529',
           auth: { username: 'root', password: 'test123' },
         });
+        const databaseList = await sysDb.listDatabases();
+        if (!databaseList.includes('code-embedding')) {
+          await sysDb.createDatabase('code-embedding');
+        }
+        return sysDb.database('code-embedding');
       },
     },
   ],
