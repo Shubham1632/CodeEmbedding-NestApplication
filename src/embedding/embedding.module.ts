@@ -4,11 +4,13 @@ import { EmbeddingService } from './embedding.service';
 import { OpenAIClient, OpenAIKeyCredential } from '@azure/openai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import * as dotenv from 'dotenv';
+import {CacheService} from "../cache/cache-service/cache.service";
 
 @Module({
   controllers: [EmbeddingController],
   providers: [
     EmbeddingService,
+    CacheService,
     {
       provide: OpenAIClient,
       useFactory: () => {
@@ -25,6 +27,7 @@ import * as dotenv from 'dotenv';
         });
       },
     },
+
   ],
 })
 export class EmbeddingModule {}

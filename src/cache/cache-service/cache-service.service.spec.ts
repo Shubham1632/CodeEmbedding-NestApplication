@@ -34,17 +34,28 @@ describe('CacheServiceService', () => {
   });
 
   it('should call save method from arango collection when saving cache', async() => {
-    await service.save('test', [1,2,3]);
+    await service.save('test', {data: [{embedding: [1, 2, 3], index: 0}], usage: {promptTokens: 0, totalTokens: 0}});
     expect(collection.save).toBeCalledTimes(1);
     expect(collection.save).toBeCalledWith({
       _key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809',
       code: 'test',
-      embedding: [1,2,3]
+      embedding: {
+        data: [
+          {
+            embedding: [1, 2, 3],
+            index: 0
+          }
+        ],
+        usage: {
+          promptTokens: 0,
+          totalTokens: 0
+        }
+      }
     });
   });
 
   it('should call get method from arango collection when getting cache', async() => {
-    jest.spyOn(collection, 'documents').mockResolvedValue([{_key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809', code: 'test', embedding: [1, 2]}]);
+    jest.spyOn(collection, 'documents').mockResolvedValue([{_key: '90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809', code: 'test', embedding: {data: [{embedding: [1, 2, 3], index: 0}], usage: {promptTokens: 0, totalTokens: 0}}}]);
     await service.get('test');
     expect(collection.documents).toBeCalledTimes(1);
     expect(collection.documents).toBeCalledWith('90a3ed9e32b2aaf4c61c410eb925426119e1a9dc53d4286ade99a809'
