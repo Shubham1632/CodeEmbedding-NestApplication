@@ -4,11 +4,14 @@ import { EmbeddingService } from './embedding.service';
 import { OpenAIClient, OpenAIKeyCredential } from '@azure/openai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import * as dotenv from 'dotenv';
+import { CacheService } from '../cache/cache-service/cache.service';
+import { Database } from 'arangojs';
 
 @Module({
   controllers: [EmbeddingController],
   providers: [
     EmbeddingService,
+    CacheService,
     {
       provide: OpenAIClient,
       useFactory: () => {
@@ -23,6 +26,20 @@ import * as dotenv from 'dotenv';
         return new QdrantClient({
           url: 'http://127.0.0.1:6333',
         });
+      },
+    },
+    {
+      provide: 'ARANGODB_CONNECTION',
+      useFactory: async () => {
+        const sysDb = new Database({
+          url: 'http://localhost:8529',
+          auth: { username: 'root', password: 'test123' },
+        });
+        const databaseList = await sysDb.listDatabases();
+        if (!databaseList.includes('code-embedding')) {
+          await sysDb.createDatabase('code-embedding');
+        }
+        return sysDb.database('code-embedding');
       },
     },
   ],

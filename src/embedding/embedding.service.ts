@@ -1,26 +1,21 @@
-import {
-  EmbeddingItem,
-  Embeddings,
-  OpenAIClient,
-  OpenAIKeyCredential,
-} from '@azure/openai';
+import { EmbeddingItem, Embeddings, OpenAIClient } from '@azure/openai';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import { error, log } from 'console';
 import { randomUUID } from 'crypto';
-import * as dotenv from 'dotenv';
 import {
   EmbeddingResultDTO,
   FunctionData,
   Point,
   SearchResultDTO,
 } from './dto/embedding.dto';
+import { CacheService } from '../cache/cache-service/cache.service';
 
 @Injectable()
 export class EmbeddingService {
   constructor(
     private readonly openAIClient: OpenAIClient,
     private readonly qdrantClient: QdrantClient,
+    private readonly cacheService: CacheService,
   ) {}
 
   async save(
@@ -29,17 +24,26 @@ export class EmbeddingService {
   ): Promise<EmbeddingResultDTO> {
     const collectionExist = await this.isCollection(collectionName);
     if (!collectionExist) {
-      this.createCollection(collectionName);
+      await this.createCollection(collectionName);
     }
-    const functionbody: string[] = [];
+    const functionBody: string[] = [];
     data.forEach((element) => {
-      functionbody.push(element.body);
+      functionBody.push(element.body);
     });
-    const embeddings = await this.createEmbeddings(functionbody);
+    const embeddings: Embeddings = await this.createEmbeddings(functionBody);
+    const promises = embeddings.data.map(
+      async (embedding: EmbeddingItem, index: number) => {
+        await this.cacheService.save(data[index].body, {
+          data: [embedding],
+          usage: { promptTokens: 0, totalTokens: 0 },
+        });
+      },
+    );
+    await Promise.all(promises);
     return await this.saveEmbeddings(embeddings, data, collectionName);
   }
 
-  async isCollection(collectionName: string): Promise<boolean> {
+  private async isCollection(collectionName: string): Promise<boolean> {
     const collections = (await this.qdrantClient.getCollections()).collections;
     let collectionExist: boolean = false;
     collections.forEach((collection) => {
@@ -50,13 +54,30 @@ export class EmbeddingService {
     return collectionExist;
   }
 
-  async createEmbeddings(data: string[]): Promise<Embeddings> {
-    return await this.openAIClient.getEmbeddings(
-      'text-embedding-ada-002',
-      data,
+  private async createEmbeddings(data: string[]): Promise<Embeddings> {
+    const embeddings: Embeddings = {
+      data: [],
+      usage: {
+        promptTokens: 0,
+        totalTokens: 0,
+      },
+    };
+    const promises = data.map(async (element) => {
+      const cache = await this.cacheService.get(element);
+      if (cache) {
+        return cache;
+      } else {
+        return await this.openAIClient.getEmbeddings('text-embedding-ada-002', [
+          element,
+        ]);
+      }
+    });
+    embeddings.data = (await Promise.all(promises)).map(
+      (element) => element.data[0],
     );
+    return embeddings;
   }
-  async saveEmbeddings(
+  private async saveEmbeddings(
     embeddings: Embeddings,
     functionData: FunctionData[],
     collectionName: string,

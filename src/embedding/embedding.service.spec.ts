@@ -1,4 +1,3 @@
-import { Query } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmbeddingService } from './embedding.service';
 import { OpenAIClient } from '@azure/openai';
@@ -8,13 +7,13 @@ import {
   FunctionData,
   SearchResultDTO,
 } from './dto/embedding.dto';
-import * as dotenv from 'dotenv';
-import path from 'path';
+import { CacheService } from '../cache/cache-service/cache.service';
 
 describe('EmbeddingService', () => {
   let service: EmbeddingService;
   let qdrant: QdrantClient;
   let openai: OpenAIClient;
+  let cacheService: CacheService;
   const collectionName = 'code';
 
   beforeEach(async () => {
@@ -39,12 +38,22 @@ describe('EmbeddingService', () => {
             };
           },
         },
+        {
+          provide: CacheService,
+          useFactory: () => {
+            return {
+              get: jest.fn(null).mockReturnValue(null),
+              save: jest.fn(),
+            };
+          },
+        },
       ],
     }).compile();
 
     service = module.get<EmbeddingService>(EmbeddingService);
     qdrant = module.get<QdrantClient>(QdrantClient);
     openai = module.get<OpenAIClient>(OpenAIClient);
+    cacheService = module.get<CacheService>(CacheService);
   });
 
   it('should be defined', () => {
@@ -151,5 +160,96 @@ describe('EmbeddingService', () => {
     );
     expect(response[0].id).toBe('43b83ae1-dbf8-4d42-93a0-7d0d127c9043');
     expect(response[0].version).toBe(0);
+  });
+
+  it('should cache the embeddings when saved', async () => {
+    const functionData: FunctionData[] = [
+      {
+        name: 'GlowAdvancement.addCriterion',
+        body: 'public void addCriterion(String criterion) {\n        if (!criteriaIds.contains(criterion)) {\n            criteriaIds.add(criterion);\n        }\n    }',
+        link: 'dummy link',
+      },
+      {
+        name: 'GlowAdvancement.addRequirement',
+        body: 'public void addRequirement(List<String> criteria) {\n        requirements.add(criteria);\n    }',
+        link: 'dummy link',
+      },
+    ];
+
+    const mockedEmbeddingsResponse = {
+      data: [
+        {
+          embedding: [-0.0015572973, 0.0069505316, -0.0048345947, 0.0019796833],
+          index: 0,
+        },
+
+        {
+          embedding: [-0.0003264073, 0.029289693, 0.00003256058, -0.024108855],
+          index: 1,
+        },
+      ],
+      usage: { promptTokens: 45, totalTokens: 45 },
+    };
+
+    jest
+      .spyOn(qdrant, 'getCollections')
+      .mockResolvedValue({ collections: [{ name: collectionName }] });
+    jest.spyOn(cacheService, 'save').mockResolvedValue();
+    jest
+      .spyOn(openai, 'getEmbeddings')
+      .mockResolvedValue(mockedEmbeddingsResponse);
+
+    await service.save(functionData, collectionName);
+    expect(cacheService.save).toBeCalledTimes(2);
+  });
+
+  it('should return the cached embeddings when searched', async () => {
+    const functionData: FunctionData[] = [
+      {
+        name: 'GlowAdvancement.addCriterion',
+        body: 'public void addCriterion(String criterion) {\n        if (!criteriaIds.contains(criterion)) {\n            criteriaIds.add(criterion);\n        }\n    }',
+        link: 'dummy link',
+      },
+      {
+        name: 'GlowAdvancement.addRequirement',
+        body: 'public void addRequirement(List<String> criteria) {\n        requirements.add(criteria);\n    }',
+        link: 'dummy link',
+      },
+    ];
+
+    const mockedEmbeddingsResponse = {
+      data: [
+        {
+          embedding: [-0.0015572973, 0.0069505316, -0.0048345947, 0.0019796833],
+          index: 0,
+        },
+
+        {
+          embedding: [-0.0003264073, 0.029289693, 0.00003256058, -0.024108855],
+          index: 1,
+        },
+      ],
+      usage: { promptTokens: 45, totalTokens: 45 },
+    };
+    jest
+      .spyOn(qdrant, 'getCollections')
+      .mockResolvedValue({ collections: [{ name: collectionName }] });
+    jest.spyOn(cacheService, 'get').mockResolvedValueOnce(null);
+    jest.spyOn(cacheService, 'get').mockResolvedValueOnce({
+      data: [
+        {
+          embedding: [-0.0015572973, 0.0069505316, -0.0048345947, 0.0019796833],
+          index: 0,
+        },
+      ],
+      usage: { promptTokens: 45, totalTokens: 45 },
+    });
+    jest
+      .spyOn(openai, 'getEmbeddings')
+      .mockResolvedValue(mockedEmbeddingsResponse);
+
+    await service.save(functionData, collectionName);
+
+    expect(openai.getEmbeddings).toBeCalledTimes(1);
   });
 });
