@@ -1,4 +1,4 @@
-name: Create diagram
+name: Visualize codebase
 on:
   workflow_dispatch: {}
   push:
