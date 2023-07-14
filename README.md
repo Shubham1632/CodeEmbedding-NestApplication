@@ -25,6 +25,7 @@
 ## Description
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+![Visualization of the codebase](./diagram.svg)
 
 ## Installation
 
